@@ -1,0 +1,17 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>springboot-examples-service</groupId>
+    <artifactId>springboot-examples-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <groupId>springboot-logger-examples-service</groupId>
+  <artifactId>springboot-logger-examples-service</artifactId>
+  <packaging>pom</packaging>
+  <name>springboot-logger-examples-service</name>
+  <modules>
+  	<module>springboot-logback-logger-examples-service</module>
+  	<module>springboot-log4j-logger-examples-service</module>
+  	<module>springboot-jul-logger-examples-service</module>
+  </modules>
+</project>

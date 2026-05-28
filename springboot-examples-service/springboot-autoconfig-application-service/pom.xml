@@ -1,0 +1,15 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>springboot-examples-service</groupId>
+    <artifactId>springboot-examples-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>springboot-autoconfig-application-service</artifactId>
+  <packaging>pom</packaging>
+  <name>springboot-autoconfig-application-service</name>
+  <modules>
+  	<module>springboot-embedded-db-autoconfig-service</module>
+  	<module>springboot-application-service</module>
+  </modules>
+</project>
