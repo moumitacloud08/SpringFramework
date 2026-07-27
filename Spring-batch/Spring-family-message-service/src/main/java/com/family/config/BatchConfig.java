@@ -1,7 +1,16 @@
 package com.family.config;
 
+import javax.sql.DataSource;
+
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
+import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
@@ -9,6 +18,7 @@ import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import com.family.model.Family;
 
@@ -16,6 +26,9 @@ import com.family.model.Family;
 @EnableBatchProcessing
 public class BatchConfig {
 
+	// ==========================
+	// Reader
+	// ==========================
 	@Bean
 	public FlatFileItemReader<Family> familyReader() {
 
@@ -25,7 +38,7 @@ public class BatchConfig {
 		reader.setLinesToSkip(1);
 
 		DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-		tokenizer.setNames("Id", "Name", "Relation", "Mobile Number");
+		tokenizer.setNames("id", "name", "relation", "phoneNumber");
 
 		BeanWrapperFieldSetMapper<Family> fieldSetMapper = new BeanWrapperFieldSetMapper<Family>();
 		fieldSetMapper.setTargetType(Family.class);
@@ -40,6 +53,10 @@ public class BatchConfig {
 
 	}
 
+	// ==========================
+	// Processor
+	// ==========================
+	@Bean
 	public ItemProcessor<Family, Family> familyProcessor() {
 		return family -> {
 			family.setName(family.getName().toUpperCase());
@@ -47,6 +64,43 @@ public class BatchConfig {
 			return family;
 		};
 
+	}
+
+	// ==========================
+	// Writer
+	// ==========================
+	@Bean
+	public JdbcBatchItemWriter<Family> familyWriter(DataSource dataSource) {
+		JdbcBatchItemWriter<Family> writer = new JdbcBatchItemWriter<>();
+		writer.setDataSource(dataSource);
+
+		writer.setSql("INSERT INTO family " + "(id,name,relation,phone_number) "
+				+ "VALUES (:id,:name,:relation,:phoneNumber)");
+
+		writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
+
+		writer.afterPropertiesSet();
+		return writer;
+
+	}
+	 // ==========================
+    // Step
+    // ==========================
+	@Bean
+	public Step familyStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+			FlatFileItemReader<Family> familyReader, ItemProcessor<Family, Family> familyprocessor,
+			JdbcBatchItemWriter<Family> familyWriter) {
+		return new StepBuilder("familyStep", jobRepository).<Family, Family>chunk(2, transactionManager)
+				.reader(familyReader).processor(familyprocessor).writer(familyWriter).build();
+
+	}
+	
+	public Job familyJob(JobRepository jobRepository,
+			Step familyStep) {
+				return new JobBuilder("familyJob",jobRepository)
+						.start(familyStep)
+						.build();
+		
 	}
 
 }
