@@ -18,7 +18,12 @@ public class EmailItemWriter  implements ItemWriter<Family>{
 	public void write(Chunk<? extends Family> chunk) {
 		
 		for(Family family : chunk.getItems()) {
-			emailService.sendEmail(family);
+			try {
+				emailService.sendEmail(family,true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				emailService.sendEmail(family);
+			}
 		}
 	}
 	
