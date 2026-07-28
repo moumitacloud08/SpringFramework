@@ -21,6 +21,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.family.model.Family;
+import com.family.writer.EmailItemWriter;
 
 @Configuration
 @EnableBatchProcessing
@@ -38,7 +39,7 @@ public class BatchConfig {
 		reader.setLinesToSkip(1);
 
 		DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-		tokenizer.setNames("id", "name", "relation", "phoneNumber");
+		tokenizer.setNames("id", "name", "relation", "phoneNumber","email");
 
 		BeanWrapperFieldSetMapper<Family> fieldSetMapper = new BeanWrapperFieldSetMapper<Family>();
 		fieldSetMapper.setTargetType(Family.class);
@@ -66,35 +67,27 @@ public class BatchConfig {
 
 	}
 
-	// ==========================
-	// Writer
-	// ==========================
-	@Bean
-	public JdbcBatchItemWriter<Family> familyWriter(DataSource dataSource) {
-		JdbcBatchItemWriter<Family> writer = new JdbcBatchItemWriter<>();
-		writer.setDataSource(dataSource);
 
-		writer.setSql("INSERT INTO family " + "(id,name,relation,phone_number) "
-				+ "VALUES (:id,:name,:relation,:phoneNumber)");
-
-		writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>());
-
-		writer.afterPropertiesSet();
-		return writer;
-
-	}
 	 // ==========================
     // Step
     // ==========================
 	@Bean
-	public Step familyStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
-			FlatFileItemReader<Family> familyReader, ItemProcessor<Family, Family> familyprocessor,
-			JdbcBatchItemWriter<Family> familyWriter) {
-		return new StepBuilder("familyStep", jobRepository).<Family, Family>chunk(2, transactionManager)
-				.reader(familyReader).processor(familyprocessor).writer(familyWriter).build();
+	public Step familyStep(JobRepository jobRepository,
+			PlatformTransactionManager transactionManager,
+			EmailItemWriter writer) {
+		return new StepBuilder("familyStep", jobRepository)
+				.<Family, Family>chunk(2, transactionManager)
+				.reader(familyReader())
+				.processor(familyProcessor())
+				.writer(writer)
+				.build();
 
 	}
 	
+	// ==========================
+    // Job
+    // ==========================
+	@Bean
 	public Job familyJob(JobRepository jobRepository,
 			Step familyStep) {
 				return new JobBuilder("familyJob",jobRepository)
